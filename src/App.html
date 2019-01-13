@@ -1,0 +1,172 @@
+<div class="app">
+	<div data-reactroot="" class="wrapper">
+		<div class="toasts"><span></span></div>
+		<div class="results-page">
+			<Header />
+			<div class="accordion-wrapper"></div>
+
+			<div id="map" class="map fff leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	const serverBase = window.serverBase || '//maps.kosmosnimki.ru/';
+
+	export default {
+		data() {
+			return {
+				regl: null,
+				clasters: false,
+				layers: {},
+				filter: ''
+			}
+		},
+		methods: {
+			parseJSON(json) {
+				// let columns = json.fields.reduce((p, c, i) => {
+					// p[c.name] = i;
+					// return p;
+				// }, {});
+				let featureCollection = {
+						type: 'FeatureCollection', 
+						features: json.features.map(function(pt, i) {
+							let it = pt.attributes,
+								geo = pt.geometry;
+
+							it.id = it.poi_id;
+							it.name = it.category === 5 ? 'Toilettes' : 'Belvédère/point de vue';
+							
+							return {
+								type: 'Feature',
+								id: it.id,
+								properties: it,
+								geometry: { type: 'Point', coordinates: [geo.x, geo.y ] }
+							}})
+					},
+					markers = L.markerClusterGroup({
+						showCoverageOnHover: false,
+						disableClusteringAtZoom: 16
+					});
+
+				let geoJsonLayer = this.geoJsonLayer = L.geoJson(featureCollection, {
+					pointToLayer: (geoJsonPoint, latlng) => {
+						return L.marker(latlng, { icon: L.divIcon({
+							iconSize: [26, 26],
+							html: '',
+							// html: geoJsonPoint.id || '21',
+							className: 'sia-icon-' + geoJsonPoint.properties.category
+						}) });
+					},
+
+					onEachFeature: (feature, layer) => {
+						let props = feature.properties,
+							img = props.Images ? '<img src="' + props.Images + '" /><br>' : '',
+							html = img +
+								'poi_id: <a href="' + props.Website + '" class="Name" target="none"><strong>' + props.poi_id + '</strong></a>\
+								<br>name: <b>' + props.name + '</b>';
+						// layer.bindPopup(html); //, {autoClose: false, closeOnClick: false, keepInView: true});
+						layer.on('click', () => {
+							L.popup()
+								.setLatLng(layer.getLatLng())
+								.setContent(html)
+								.openOn(L.leafletMap);
+						});
+					}
+				});
+
+				markers.addLayer(geoJsonLayer);
+				return markers;
+			},
+			createMap(it) {
+				let {clasters} = this.get();
+					it = it || {};
+				let app = it.app || {},
+					gmxMap = app.gmxMap || {},
+					state = it.state || {},
+					calendar = state.calendar || {},
+					mapID = gmxMap.mapID || '946GH',
+					apiKey = gmxMap.apiKey,
+					pos = state.map ? state.map.position : {},
+					url = 'https://hiksterarcgis.goazimut.com/arcgis/rest/services/Hikster_New_Schema_Test/MapServer/0/query?returnGeometry=true&where=type_id%20IN%20(2%2C3%2C7%2C58%2C11%2C16%2C18%2C64%2C71%2C28%2C57%2C42%2C44%2C80%2C33%2C4%2C8%2C9%2C68%2C19%2C67%2C25%2C27%2C70%2C32%2C40%2C39%2C74%2C46%2C75%2C47%2C48%2C50%2C51%2C77%2C78)&outSr=4326&outFields=*&inSr=4326&geometry=%7B%22xmin%22%3A-69.79940414428712%2C%22ymin%22%3A47.830328289805784%2C%22xmax%22%3A-69.6467971801758%2C%22ymax%22%3A47.921173915514196%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelContains&f=json';
+
+// url = './ext/data.json';
+				fetch(url).then(function(response) {
+						return response.json();
+					}).then(function(json) {
+						let markers = this.parseJSON(json);
+						this.markers = markers;
+
+						if(L.leafletMap) {
+							L.leafletMap.remove();
+						}
+
+						let MapBox = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/outdoors-v9/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiY2xhaXJlZGVndWVsbGUiLCJhIjoiY2ozazVraGkzMDB4NTJ3cXQ2NXd4YjZrYiJ9.aeR6EKn38zvZTvCVMgTdDA', {
+								maxZoom: 18,
+								attribution: '&copy; Imagery <a href="http://mapbox.com/about/maps/">MapBox</a>'
+							}),
+							OSM = L.tileLayer('https://tilessputnik.ru/{z}/{x}/{y}.png', {
+								maxZoom: 18
+								// ,
+								// attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
+							});
+						let node = document.getElementsByClassName('map')[0];
+						let map = L.leafletMap = new L.Map(node, {
+							srs: 3857,
+							layers: [MapBox],
+							attributionControl: false,
+							center: new L.LatLng(pos.y || 47.643186, pos.x || -69.653320),
+							// center: new L.LatLng(pos.y || 69.653320, pos.x || 47.643186),
+							// center: new L.LatLng(pos.y || 0, pos.x || 0),
+							zoom: pos.z || 7
+						});//.on('zoomstart', this.zoomstart.bind(this));
+						L.gmxLocale.setLanguage('eng');
+						L.leafletMap.gmxControlsManager.init({
+							gmxCopyright: {scanexCopyright: ''}
+						});
+						// heatmap
+
+						L.control.layers({
+							MapBox: MapBox,
+							OSM: OSM
+						}, {
+							
+							hikster: L.tileLayer('https://hiksterarcgis.goazimut.com/arcgis/rest/services/Hikster_New_Schema_Test_Tiles_Activity100/MapServer/tile/{z}/{y}/{x}', {
+								maxZoom: 18,
+								attribution: '&copy; <a href="//hikster.com/">hikster.com</a>'
+							}).addTo(map),
+							poi: markers.addTo(map)
+
+						}, {collapsed: false}).addTo(map);
+					}.bind(this));
+			},
+			zoomstart() {
+				console.log('zoomstart', arguments);
+			}
+		},
+
+		components: {
+			Header: './Header.html'
+		},
+
+		onstate({ changed, current, previous }) {
+			console.log('map onstate', changed, current, previous);
+			// if (changed.urlParams && current.urlParams) {
+				this.createMap();
+			// }
+			// if (changed.filter) {
+				// this.setFilter(current.filter);
+			// }
+			// if (changed.clasters && this.markers) {
+				// this.markers.options.disableClusteringAtZoom = current.clasters ? 16 : 0;
+				// this.markers.clearLayers();
+				// this.markers.addLayers(this.geoJsonLayer.getLayers());
+			// }
+		}
+	}
+</script>
+
+<style>
+
+</style>
