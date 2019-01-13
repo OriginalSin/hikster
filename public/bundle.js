@@ -251,7 +251,7 @@ var app = (function () {
 
 						it.id = it.poi_id;
 						it.name = it.category === 5 ? 'Toilettes' : 'Belvédère/point de vue';
-						it.Images = it.category === 5 ? 'https://i.guim.co.uk/img/media/2e83bc9aaf3e9e1814f2d25113ddb9626a4ffd37/0_790_3456_3660/master/3456.jpg?width=1920&quality=85&auto=format&fit=max&s=168da8e8e8c8e33c37bffa6f4771af54' : 'https://www.tour-guide-canada.com/images/travel-across-canada.jpg';
+						it.Images = it.category !== 5 ? 'https://i.guim.co.uk/img/media/2e83bc9aaf3e9e1814f2d25113ddb9626a4ffd37/0_790_3456_3660/master/3456.jpg?width=1920&quality=85&auto=format&fit=max&s=168da8e8e8c8e33c37bffa6f4771af54' : 'https://www.tour-guide-canada.com/images/travel-across-canada.jpg';
 						
 						return {
 							type: 'Feature',
@@ -340,11 +340,12 @@ var app = (function () {
 					L.leafletMap.gmxControlsManager.init({
 						gmxCopyright: {scanexCopyright: ''}
 					});
-					// heatmap
 
+					L.leafletMap.gmxBaseLayersManager.initDefaults().then(() => {
 					L.control.layers({
 						MapBox: MapBox,
-						OSM: OSM
+						OSM: OSM,
+						bing: L.leafletMap.gmxBaseLayersManager.get('bingSatellite')
 					}, {
 						
 						hikster: L.tileLayer('https://hiksterarcgis.goazimut.com/arcgis/rest/services/Hikster_New_Schema_Test_Tiles_Activity100/MapServer/tile/{z}/{y}/{x}', {
@@ -354,6 +355,7 @@ var app = (function () {
 						poi: markers.addTo(map)
 
 					}, {collapsed: false}).addTo(map);
+					});
 				}.bind(this));
 		},
 		zoomstart() {
