@@ -14155,7 +14155,7 @@ a.ui.basic.label:hover {
 
 .hk-header a {
     color: #fff;
-    padding-left: .625em
+    /* padding-left: .625em */
 }
 
 .toolbox {
