@@ -18306,7 +18306,7 @@ a.ui.basic.label:hover {
 }
 
 .results-page .accordion-wrapper {
-    padding-top: 6.9em;
+    /* padding-top: 6.9em; */
     z-index: 999!important;
     background-color: #fff
 }
@@ -18325,7 +18325,7 @@ a.ui.basic.label:hover {
 
 @media screen and (max-width: 1185px) {
     .results-page .accordion-wrapper {
-        padding-top:9.7em
+        /* padding-top:9.7em */
     }
 
     /* .results-page .leaflet-top.leaflet-right { */
@@ -18335,7 +18335,7 @@ a.ui.basic.label:hover {
 
 @media screen and (max-width: 845px) {
     .results-page .accordion-wrapper {
-        padding-top:12.4em
+        /* padding-top:12.4em */
     }
 
     /* .results-page .leaflet-top.leaflet-right { */
@@ -18345,12 +18345,17 @@ a.ui.basic.label:hover {
 
 @media screen and (max-width: 560px) {
     .results-page .accordion-wrapper {
-        padding-top:22.4em
+        /* padding-top:22.4em */
     }
-
-    .results-page .leaflet-top.leaflet-right {
-        margin-top: 30em
-    }
+	.hk-header__search {
+		display: none;
+	}
+	.leaflet-top {
+		top: 0px;
+	}
+    /* .results-page .leaflet-top.leaflet-right { */
+        /* margin-top: 30em */
+    /* } */
 }
 
 .map {
@@ -18365,7 +18370,8 @@ a.ui.basic.label:hover {
 }
 
 .map .leaflet-popup-content {
-    margin: 13px
+    margin: 13px;
+	min-width: 160px;
 }
 
 .map .leaflet-popup-content .lf-popup.poi .header {
